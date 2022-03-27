@@ -51,6 +51,27 @@ class ProductController extends AbstractController
             return new Response('No products found');
         }
 
-        return new Response('Check out this great product: '.$product->getName());
+        return $this->render('form/index.html.twig', [
+            'product' => $product,
+        ]);
+
+        //return new Response('Check out this great product: '.$product->getName());
     }
+
+    /**
+     * @Route("/product/delete/{id}", name="product_show")
+     */
+    public function deleteProduct(ManagerRegistry $doctrine, int $id): Response
+    {
+        $entityManager = $doctrine->getManager();
+
+        $product = $doctrine->getRepository(Product::class)->find($id);
+        $entityManager->remove($product);
+        $entityManager->flush();
+
+        $response = $this->forward('App\Controller\HomeController::index');
+        return $response;
+    }
+
+
 }

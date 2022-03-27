@@ -21,7 +21,9 @@
         <div class="example-wrapper">
             <h1>Liste des produits</h1>
             {% for product in products %}
-                <li>{{ product.name }}</li>
+                <li><a href="/product/{{ product.id }}">{{ product.name }} {{ product.price }} € </a></li>
+                <a href="/product/delete/{{ product.id }}"><button type="button" class="btn btn-outline-danger">x</button></a>
+
             {% endfor %}
         </div>
     </body>
