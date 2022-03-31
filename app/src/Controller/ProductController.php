@@ -2,11 +2,19 @@
 
 namespace App\Controller;
 
+use Symfony\Component\Form\AbstractType;
+use Symfony\Component\Form\Extension\Core\Type\DateType;
+use Symfony\Component\Form\Extension\Core\Type\SubmitType;
+use Symfony\Component\Form\Extension\Core\Type\TextType;
+
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Annotation\Route;
 use App\Entity\Product;
 use Doctrine\Persistence\ManagerRegistry;
+
+use App\Form\Type\ProductType;
 
 class ProductController extends AbstractController
 {
@@ -25,9 +33,9 @@ class ProductController extends AbstractController
         $entityManager = $doctrine->getManager();
 
         $product = new Product();
-        $product->setName('Keyboard');
-        $product->setPrice(1999);
-        $product->setDescription('Ergonomic and stylish!');
+        //$product->setName('Keyboard');
+        //$product->setPrice(1999);
+        //$product->setDescription('Ergonomic and stylish!');
 
         // tell Doctrine you want to (eventually) save the Product (no queries yet)
         $entityManager->persist($product);
@@ -35,28 +43,12 @@ class ProductController extends AbstractController
         // actually executes the queries (i.e. the INSERT query)
         $entityManager->flush();
 
-        return new Response('Saved new product with id '.$product->getId());
+        $response = $this->forward('App\Controller\HomeController::index');
+        return $response;
+
+        //return new Response('Saved new product with id '.$product->getId());
     }
-    /**
-     * @Route("/product/{id}", name="product_show")
-     */
-    public function show(ManagerRegistry $doctrine, int $id): Response
-    {
-        $product = $doctrine->getRepository(Product::class)->find($id);
 
-        if (!$product) {
-            // throw $this->createNotFoundException(
-            //     'No product found for id '.$id
-            // );
-            return new Response('No products found');
-        }
-
-        return $this->render('form/index.html.twig', [
-            'product' => $product,
-        ]);
-
-        //return new Response('Check out this great product: '.$product->getName());
-    }
 
     /**
      * @Route("/product/delete/{id}", name="product_show")
@@ -73,5 +65,70 @@ class ProductController extends AbstractController
         return $response;
     }
 
+    /**
+     * @Route("/product/form/new", name="product_new")
+     */
+
+    public function new(Request $request,ManagerRegistry $doctrine): Response
+    {
+        // creates a task object and initializes some data for this example
+        $product = new Product();
+
+      //  $form = $this->createForm(ProductType::class, $product);
+
+        $form = $this->createFormBuilder($product)
+            ->add('name', TextType::class)
+            ->add('price', TextType::class)
+            ->add('description', TextType::class)
+            ->add('save', SubmitType::class, ['label' => 'Create Product'])
+            ->getForm();
+
+            $form->handleRequest($request);
+        if ($form->isSubmitted() && $form->isValid()) {
+            // $form->getData() holds the submitted values
+            // but, the original `$task` variable has also been updated
+            $result = $form->getData();
+
+            $em = $doctrine->getManager();
+            $em->persist($result);
+            $em->flush();
+
+            $response = $this->forward('App\Controller\HomeController::index');
+            return $response;
+        }
+
+        return $this->renderForm('product/index.html.twig', [
+            'form' => $form,
+        ]);
+
+    }
+
+    /**
+     * @Route("/product/edit/{id}", name="product_edit")
+     */
+    public function editProduct(ManagerRegistry $doctrine, int $id): Response
+    {
+        $product = $doctrine->getRepository(Product::class)->find($id);
+
+        if (!$product) {
+            return new Response('No products found');
+        }
+
+       // $product = new Product();
+
+        $form = $this->createFormBuilder($product)
+            ->add('name', TextType::class)
+            ->add('price', TextType::class)
+            ->add('description', TextType::class)
+            ->add('save', SubmitType::class, ['label' => 'Edit Product'])
+            ->getForm();
+
+        return $this->renderForm('product/index.html.twig', [
+            'form' => $form,
+           // 'product' => $product,
+        ]);
+
+        //return new Response('Check out this great product: '.$product->getName());
+    }
 
 }

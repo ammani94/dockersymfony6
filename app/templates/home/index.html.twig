@@ -19,9 +19,11 @@
     <body>
     {% include ('navbar/navbar.html.twig') %}
         <div class="example-wrapper">
+
             <h1>Liste des produits</h1>
+            <a href="/product/form/new"><button type="button" class="btn btn-outline-primary">Créer</button></a>
             {% for product in products %}
-                <li><a href="/product/{{ product.id }}">{{ product.name }} {{ product.price }} € </a></li>
+                <li><a href="/product/edit/{{ product.id }}">{{ product.name }} {{ product.price }} € </a></li>
                 <a href="/product/delete/{{ product.id }}"><button type="button" class="btn btn-outline-danger">x</button></a>
 
             {% endfor %}
