@@ -85,8 +85,7 @@ class ProductController extends AbstractController
 
             $form->handleRequest($request);
         if ($form->isSubmitted() && $form->isValid()) {
-            // $form->getData() holds the submitted values
-            // but, the original `$task` variable has also been updated
+
             $result = $form->getData();
 
             $em = $doctrine->getManager();
@@ -106,8 +105,9 @@ class ProductController extends AbstractController
     /**
      * @Route("/product/edit/{id}", name="product_edit")
      */
-    public function editProduct(ManagerRegistry $doctrine, int $id): Response
+    public function editProduct(Request $request,ManagerRegistry $doctrine, int $id): Response
     {
+        $entityManager = $doctrine->getManager();
         $product = $doctrine->getRepository(Product::class)->find($id);
 
         if (!$product) {
@@ -123,12 +123,22 @@ class ProductController extends AbstractController
             ->add('save', SubmitType::class, ['label' => 'Edit Product'])
             ->getForm();
 
+            $form->handleRequest($request);
+            if ($form->isSubmitted() && $form->isValid()) {
+
+                $result = $form->getData();
+                $product->setName($result->getName());
+                $product->setPrice($result->getPrice());
+                $product->setDescription($result->getDescription());
+                $entityManager->flush();
+
+                $response = $this->forward('App\Controller\HomeController::index');
+                return $response;
+            }
+
         return $this->renderForm('product/index.html.twig', [
             'form' => $form,
-           // 'product' => $product,
         ]);
-
-        //return new Response('Check out this great product: '.$product->getName());
     }
 
 }
